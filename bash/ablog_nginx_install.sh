@@ -11,10 +11,10 @@ PAC_DIR=/tmp/packages
 [ -d ${PAC_DIR} ] && rm -rf ${PAC_DIR}
 mkdir ${PAC_DIR}
 cd ${PAC_DIR}
-if [ ! -f ${PAC_DIR}/acms2114_install.zip ]; then
-   echo "Download a-blog cms v2.1.1.4 Installer (php5.5.x+ Edition)"
-   wget http://www.a-blogcms.jp/_download/2114/55/acms2114_install.zip
-   if [ ! -f ${PAC_DIR}/acms2114_install.zip ]; then
+if [ ! -f ${PAC_DIR}/acms250_install.zip ]; then
+   echo "Download a-blog cms v2.5.0 Installer (php5.5.x+ Edition)"
+   wget http://developer.a-blogcms.jp/_download/250/php55/acms250_install.zip
+   if [ ! -f ${PAC_DIR}/acms250_install.zip ]; then
       echo 'a-blog cms not found!'
       exit 1
    fi
@@ -125,8 +125,8 @@ systemctl restart php-fpm
 
 # Deploy a-blog cms
 cd ${PAC_DIR}
-unzip ./acms2114_install.zip
-mv ./release-2114_install/ablogcms/* ${DOC_ROOT}/
+unzip ./acms250_install.zip
+mv ./acms250_install/ablogcms/* ${DOC_ROOT}/
 chown -R nginx:root ${DOC_ROOT}
 cd ${DOC_ROOT}
 chmod 666 ./config.server.php
