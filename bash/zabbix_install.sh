@@ -37,12 +37,12 @@ mysql -u ${ZBX_USER} -p${ZBX_PASS} ${ZBX_DB} < ${ZBX_SQL_PATH}/data.sql
 
 # PHP Configure
 cp -p /etc/php.ini /etc/php.ini.org
-sed -i 's/^max_execution_time.*/max_execution_time=600/' /etc/php.ini
-sed -i 's/^max_input_time.*/max_input_time=600/' /etc/php.ini
-sed -i 's/^memory_limit.*/memory_limit=256M/' /etc/php.ini
-sed -i 's/^post_max_size.*/post_max_size=32M/' /etc/php.ini
-sed -i 's/^upload_max_filesize.*/upload_max_filesize=16M/' /etc/php.ini
-sed -i "s/^\;date.timezone.*/date.timezone=\'Asia\/Tokyo\'/" /etc/php.ini
+sed -i 's/^max_execution_time.*/max_execution_time = 600/' /etc/php.ini
+sed -i 's/^max_input_time.*/max_input_time = 600/' /etc/php.ini
+sed -i 's/^memory_limit.*/memory_limit = 256M/' /etc/php.ini
+sed -i 's/^post_max_size.*/post_max_size = 32M/' /etc/php.ini
+sed -i 's/^upload_max_filesize.*/upload_max_filesize = 16M/' /etc/php.ini
+sed -i "s/^\;date.timezone.*/date.timezone = \'Asia\/Tokyo\'/" /etc/php.ini
 
 # Zabbix Server Configure
 cp -p /etc/zabbix/zabbix_server.conf /etc/zabbix/zabbix_server.conf.org
