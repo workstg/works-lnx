@@ -26,7 +26,7 @@ def main():
    print "total,read,write"
    
    for result in iops:
-      print result['t']+","+result['r']+","+result['w']
+      print result['t'] + "," + result['r'] + "," + result['w']
 
 def exec_cmd(cmd):
    from subprocess import Popen, PIPE
