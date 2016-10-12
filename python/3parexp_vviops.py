@@ -4,7 +4,8 @@ import sys
 import string
 from datetime import datetime
 
-statcmd = "/usr/bin/ssh 3paradm@3par_mgt statvv -rw -d 60 -iter 1"
+statcmd = '/usr/bin/ssh 3paradm@3par_mgt statvv -rw -d 60 -iter 1'
+tmpfile = '/root/scripts/vviops.txt'
 iops = []
 
 def main():
@@ -22,11 +23,15 @@ def main():
          at_total = True
    iops.append(results)
    
+   f = open(tmpfile, 'w')
    #print datetime.now().strftime("%A, %d. %B %Y %I:%M%p") # For debug
-   print "total,read,write"
+   #print 'total,read,write'
    
    for result in iops:
-      print result['t'] + "," + result['r'] + "," + result['w']
+      #print result['t'] + ',' + result['r'] + ',' + result['w']
+      f.write('total,read,write\n' + result['t'] + ',' + result['r'] + ',' + result['w'])
+      
+   f.close()
 
 def exec_cmd(cmd):
    from subprocess import Popen, PIPE
