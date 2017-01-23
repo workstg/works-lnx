@@ -18,7 +18,6 @@ def main():
    time.sleep(delta)
    data2 = get_clusterstats()
 
-   
    rio = (data2['result']['clusterStats']['readOps'] - data1['result']['clusterStats']['readOps']) / delta
    wio = (data2['result']['clusterStats']['writeOps'] - data1['result']['clusterStats']['writeOps']) / delta
    tio = rio + wio
