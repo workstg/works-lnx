@@ -10,16 +10,17 @@ sfuser = 'admin'
 sfpass = 'password'
 api_endpoint = 'https://192.168.0.1/json-rpc/8.0'
 api_params = {"method": "GetClusterStats", "params": {}, "id": "1" }
+delta = 30
 tmpfile = '/var/tmp/sfiops.txt'
 
 def main():
    data1 = get_clusterstats()
-   time.sleep(30)
+   time.sleep(delta)
    data2 = get_clusterstats()
 
    
-   rio = (data2['result']['clusterStats']['readOps'] - data1['result']['clusterStats']['readOps']) / 30
-   wio = (data2['result']['clusterStats']['writeOps'] - data1['result']['clusterStats']['writeOps']) / 30
+   rio = (data2['result']['clusterStats']['readOps'] - data1['result']['clusterStats']['readOps']) / delta
+   wio = (data2['result']['clusterStats']['writeOps'] - data1['result']['clusterStats']['writeOps']) / delta
    tio = rio + wio
    f = open(tmpfile, 'w')
    f.write('total,read,write\n' + str(tio) + ',' + str(rio) + ',' + str(wio))
