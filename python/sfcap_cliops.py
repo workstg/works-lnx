@@ -1,19 +1,37 @@
 #!/usr/bin/python
- 
+
 import sys
+import time
 import json
 import pycurl
 from io import BytesIO
- 
+
 sfuser = 'admin'
 sfpass = 'password'
 api_endpoint = 'https://192.168.0.1/json-rpc/8.0'
-api_params = {"method": "GetClusterCapacity", "params": {}, "id": "1" }
+api_params = {"method": "GetClusterStats", "params": {}, "id": "1" }
 tmpfile = '/var/tmp/sfiops.txt'
- 
+
 def main():
+   data1 = get_clusterstats()
+   time.sleep(30)
+   data2 = get_clusterstats()
+
+   
+   rio = (data2['result']['clusterStats']['readOps'] - data1['result']['clusterStats']['readOps']) / 30
+   wio = (data2['result']['clusterStats']['writeOps'] - data1['result']['clusterStats']['writeOps']) / 30
+   tio = rio + wio
+   f = open(tmpfile, 'w')
+   f.write('total,read,write\n' + str(tio) + ',' + str(rio) + ',' + str(wio))
+
+   #print('Total IOPS {}'.format(tio))
+   #print('Read IOPS {}'.format(rio))
+   #print('Write IOPS {}'.format(wio))
+   f.close()
+
+def get_clusterstats():
    response = BytesIO()
- 
+
    conn = pycurl.Curl()
    conn.setopt(pycurl.URL, api_endpoint)
    conn.setopt(pycurl.SSL_VERIFYPEER, False)
@@ -25,22 +43,14 @@ def main():
    conn.setopt(pycurl.POSTFIELDS, json.dumps(api_params))
    conn.setopt(pycurl.WRITEFUNCTION, response.write)
    conn.perform()
- 
+
    http_code = conn.getinfo(pycurl.HTTP_CODE)
    if not http_code is 200:
       sys.exit(1)
    else:
-      result = json.loads(response.getvalue())
- 
-   f = open(tmpfile, 'w')
-   f.write('current,average,peak\n' + str(result['result']['clusterCapacity']['currentIOPS']) + ',' + str(result['result']['clusterCapacity']['averageIOPS']) + ',' + str(result['result']['clusterCapacity']['peakIOPS']))
- 
-   #print('Average IOPS {}'.format(result['result']['clusterCapacity']['averageIOPS']))
-   #print('Current IOPS {}'.format(result['result']['clusterCapacity']['currentIOPS']))
-   #print('Peak IOPS {}'.format(result['result']['clusterCapacity']['peakIOPS']))
-   f.close()
- 
+      return json.loads(response.getvalue())
+
 if __name__ == "__main__":
    main()
- 
+
 sys.exit(0)
