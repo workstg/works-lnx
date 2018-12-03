@@ -1,0 +1,10 @@
+---
+- name: Sample Playbook
+  hosts: localhost
+  remote_user: root
+  become: yes
+  gather_facts: yes
+
+  roles:
+    - role: postfix-simple-centos7
+    

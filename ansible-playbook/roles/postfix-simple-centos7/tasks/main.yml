@@ -1,0 +1,28 @@
+---
+- name: Install Postfix
+  yum:
+    name: postfix
+    state: present
+
+- name: Configure main.cf
+  template:
+    src: main.cf.j2
+    dest: /etc/postfix/main.cf
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+
+- name: Start Postfix
+  systemd:
+    name: postfix.service
+    state: started
+    enabled: yes
+
+- name: firewalld allow Postfix traffic
+  firewalld:
+    rich_rule: 'rule family="ipv4" source address="{{ postfix_network }}" service name="smtp" accept'
+    permanent: true
+    state: enabled
+    zone: public
+    immediate: yes
