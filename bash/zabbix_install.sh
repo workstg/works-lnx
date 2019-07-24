@@ -92,28 +92,11 @@ systemctl enable zabbix-agent
 systemctl enable httpd
 
 # Firewall Configure
-cat <<EOF > /etc/firewalld/services/zabbix.xml
-<?xml version="1.0" encoding="utf-8"?>
-<service>
-  <short>Zabbix</short>
-  <description>Zabbix is an enterprise open source monitoring solution for networks and applications.</description>
-  <port protocol="tcp" port="10050"/>
-  <port protocol="tcp" port="10051"/>
-</service>
-EOF
-cat <<EOF > /etc/firewalld/services/snmp.xml
-<?xml version="1.0" encoding="utf-8"?>
-<service>
-  <short>SNMP</short>
-  <description>SNMP is the Simple Network Management Protocol.</description>
-  <port protocol="udp" port="161"/>
-  <port protocol="udp" port="162"/>
-</service>
-EOF
-firewall-cmd --reload
-firewall-cmd --add-service=http --zone=public --permanent
-firewall-cmd --add-service=zabbix --zone=public --permanent
-firewall-cmd --add-service=snmp --zone=public --permanent
+firewall-cmd --permanent --zone=public --add-service=http
+firewall-cmd --permanent --zone=public --add-service=zabbix-server
+firewall-cmd --permanent --zone=public --add-service=zabbix-agent
+firewall-cmd --permanent --zone=public --add-service=snmp
+firewall-cmd --permanent --zone=public --add-service=snmptrap
 firewall-cmd --reload
 
 exit
