@@ -10,7 +10,7 @@ cd /usr/local/src
 # Package Install
 yum -y update
 yum -y install epel-release
-rpm -ivh http://repo.zabbix.com/zabbix/2.4/rhel/7/x86_64/zabbix-release-2.4-1.el7.noarch.rpm
+rpm -ivh http://repo.zabbix.com/zabbix/4.0/rhel/7/x86_64/zabbix-release-4.0-1.el7.noarch.rpm
 yum -y install httpd mariadb mariadb-server zabbix-server-mysql zabbix-web-mysql zabbix-agent snmptt perl-Sys-Syslog net-snmp-perl net-snmp-utils
 
 # Disable SE Linux
@@ -30,10 +30,10 @@ mysql -u root -p${MYSQLPW} -e "CREATE DATABASE ${ZBX_DB} CHARACTER SET utf8;"
 mysql -u root -p${MYSQLPW} -e "CREATE USER '${ZBX_USER}'@'localhost' IDENTIFIED BY '${ZBX_PASS}';"
 mysql -u root -p${MYSQLPW} -e "GRANT ALL PRIVILEGES ON ${ZBX_DB}.* TO '${ZBX_USER}'@'localhost';"
 
-ZBX_SQL_PATH="/usr/share/doc/zabbix-server-mysql-$(rpm -q --qf '%{version}' zabbix)/create"
-mysql -u ${ZBX_USER} -p${ZBX_PASS} ${ZBX_DB} < ${ZBX_SQL_PATH}/schema.sql
-mysql -u ${ZBX_USER} -p${ZBX_PASS} ${ZBX_DB} < ${ZBX_SQL_PATH}/images.sql
-mysql -u ${ZBX_USER} -p${ZBX_PASS} ${ZBX_DB} < ${ZBX_SQL_PATH}/data.sql
+ZBX_SQL_PATH="/usr/share/doc/zabbix-server-mysql-$(rpm -q --qf '%{version}' zabbix-server-mysql)"
+cp -p ${ZBX_SQL_PATH}/create.sql.gz ./
+gunzip ./create.sql.gz
+mysql -u ${ZBX_USER} -p${ZBX_PASS} ${ZBX_DB} < create.sql
 
 # PHP Configure
 cp -p /etc/php.ini /etc/php.ini.org
