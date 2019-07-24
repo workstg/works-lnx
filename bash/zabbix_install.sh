@@ -75,10 +75,10 @@ sed -i 's/^\#date_time_format\s\=.*/\#date_time_format =\ndate_time_format = %H:
 sed -i 's/syslog_enable\s=\s1/syslog_enable = 0/' /etc/snmp/snmptt.ini
 sed -i 's/^\/etc\/snmp\/snmptt\.conf$/\/etc\/snmp\/snmptt\.conf\n\/etc\/snmp\/generaltrap\.conf/' /etc/snmp/snmptt.ini
 
-cp -p /usr/lib/systemd/system/snmptrapd.service /etc/systemd/system/snmptrapd.service
-sed -i 's/\-Lsd/\-On \-Lsd/' /etc/systemd/system/snmptrapd.service
+echo "OPTIONS=\"-m +ALL -Lsd -On\"" >> /etc/sysconfig/snmptrapd
 
 # Starting Zabbix Server
+systemctl daemon-reload
 systemctl start snmptrapd
 systemctl start snmptt
 systemctl start zabbix-server
