@@ -1,0 +1,176 @@
+---
+- name: Install EPEL repository
+  yum:
+    name: epel-release
+    state: present
+
+- name: Install Zabbix repository
+  yum:
+    name: http://repo.zabbix.com/zabbix/4.0/rhel/7/x86_64/zabbix-release-4.0-1.el7.noarch.rpm
+    state: present
+
+- name: Install packages
+  yum:
+    name:
+      - httpd
+      - mariadb
+      - mariadb-server
+      - zabbix-server-mysql
+      - zabbix-web-mysql
+      - zabbix-agent
+      - snmptt
+      - perl-Sys-Syslog
+      - net-snmp-perl
+      - net-snmp-utils
+      - libselinux-python
+      - MySQL-python
+    state: present
+
+- name: Disable SELinux
+  selinux:
+    state: permissive
+    policy: targeted
+  notify: 'Reboot OS'
+
+- name: Start MariaDB-server
+  systemd:
+    name: mariadb
+    state: started
+    enabled: yes
+
+- name: Setup MariaDB-server
+  shell: >
+    mysql -NBe "
+    SET PASSWORD FOR root@localhost = PASSWORD('{{ db_root_pass }}');
+    DELETE FROM mysql.user WHERE User = '';
+    DELETE FROM mysql.user WHERE User = 'root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+    DROP DATABASE IF EXISTS test;
+    FLUSH PRIVILEGES;
+    "
+
+- name: Setup MariaDB-client
+  template:
+    src: my.cnf.j2
+    dest: /root/.my.cnf
+    owner: root
+    group: root
+    mode: 0600
+
+- name: Create database for Zabbix
+  mysql_db:
+    name: '{{ zbx_db_name }}'
+    state: present
+    encoding: utf8
+    login_user: root
+    login_password: '{{ db_root_pass }}'
+
+- name: Create database user for Zabbix
+  mysql_user:
+    name: '{{ zbx_db_user }}'
+    password: '{{ zbx_db_pass }}'
+    priv: '{{ zbx_db_name }}.*:ALL'
+    state: present
+    login_user: root
+    login_password: '{{ db_root_pass }}'
+
+- name: Check Zabbix SQL file path
+  shell: find /usr/share/doc/zabbix-server-mysql-* -name create.sql.gz | tail -n1
+  register: sql_path
+  changed_when: False
+
+- name: Initialaze database for Zabbix
+  mysql_db:
+    name: '{{ zbx_db_name }}'
+    state: import
+    target: '{{ sql_path.stdout }}'
+    login_user: '{{ zbx_db_user }}'
+    login_password: '{{ zbx_db_pass }}'
+
+- name: Setup PHP timezone
+  lineinfile:
+    dest: /etc/php.ini
+    state: present
+    insertafter: '^\;date\.timezone'
+    line: "date.timezone = 'Asia/Tokyo'"
+
+- name: Setup Zabbix Server
+  template:
+    src: zabbix_server.conf.j2
+    dest: /etc/zabbix/zabbix_server.conf
+    owner: root
+    group: zabbix
+    mode: 0640
+
+- name: Configure snmptrapd options
+  lineinfile:
+    dest: /etc/sysconfig/snmptrapd
+    state: present
+    insertafter: EOF
+    line: 'OPTIONS="-m +ALL -Lsd -On"'
+
+- name: Set snmptrapd configuration files
+  copy:
+    src: '{{ item }}'
+    dest: /etc/snmp/{{ item }}
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - snmptrapd.conf
+    - generaltrap.conf
+
+- name: Setup SNMPTT
+  replace:
+    path: /etc/snmp/snmptt.conf
+    regexp: '^FORMAT (?!ZBXTRAP)(.*)$'
+    replace: 'FORMAT ZBXTRAP $aA \1'
+
+- name: Configure SNMPTT date_time_format
+  lineinfile:
+    dest: /etc/snmp/snmptt.ini
+    state: present
+    backrefs: yes
+    regexp: '^\#(date_time_format) ='
+    line: '\1 = %H:%M:%S %Y/%m/%d'
+
+- name: Configure SNMPTT syslog_enable
+  lineinfile:
+    dest: /etc/snmp/snmptt.ini
+    state: present
+    backrefs: yes
+    regexp: '^(syslog_enable) = 1'
+    line: '\1 = 0'
+
+- name: Configure SNMPTT snmptt_conf_files
+  lineinfile:
+    dest: /etc/snmp/snmptt.ini
+    state: present
+    insertafter: '^\/etc\/snmp\/snmptt\.conf'
+    line: '/etc/snmp/generaltrap.conf'
+
+- name: Start all services
+  systemd:
+    name: '{{ item }}'
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  with_items:
+    - snmptrapd
+    - snmptt
+    - zabbix-server
+    - zabbix-agent
+    - httpd
+
+- name: Open firewall ports
+  firewalld:
+    service: '{{ item }}'
+    permanent: yes
+    state: enabled
+    zone: public
+    immediate: yes
+  with_items:
+    - snmp
+    - snmptrap
+    - zabbix-server
+    - zabbix-agent
+    - http

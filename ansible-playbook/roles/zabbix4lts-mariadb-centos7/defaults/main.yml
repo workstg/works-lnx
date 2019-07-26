@@ -1,0 +1,5 @@
+---
+db_root_pass: mysql
+zbx_db_name: zabbix
+zbx_db_user: zabbix
+zbx_db_pass: zabbix
