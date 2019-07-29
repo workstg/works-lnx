@@ -1,0 +1,33 @@
+---
+- name: Install packages
+  yum:
+    name:
+      - httpd
+      - mariadb
+      - mariadb-server
+      - MySQL-python
+    state: present
+
+- name: Start MariaDB-server
+  systemd:
+    name: mariadb
+    state: started
+    enabled: yes
+
+- name: Setup MariaDB-server
+  shell: >
+    mysql -NBe "
+    SET PASSWORD FOR root@localhost = PASSWORD('{{ db_root_pass }}');
+    DELETE FROM mysql.user WHERE User = '';
+    DELETE FROM mysql.user WHERE User = 'root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+    DROP DATABASE IF EXISTS test;
+    FLUSH PRIVILEGES;
+    "
+
+- name: Setup MariaDB-client
+  template:
+    src: my.cnf.j2
+    dest: /root/.my.cnf
+    owner: root
+    group: root
+    mode: 0600
